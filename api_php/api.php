@@ -26,25 +26,45 @@
         case 'GET':
             // echo "AQUI AÇÕES DO MÉTODO GET";
             // CONVERTE PARA JSON E RETORNA
-            echo json_encode($usuarios);
+            echo json_encode($usuarios, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
             break;
         case 'POST':
             // echo "AQUI AÇÕES DO MÉTODO POST";
+            //  LER O DADO NO CORPO DA REQUISIÇÃO
             $dados = json_decode(file_get_contents('php://input'), true);
             // print_r($dados);
-            $novoUsuario = [
+
+            // VERIFICA E OS CAMPOS OBRIGATÓRIOS FORAM PREENCHIDOS
+            if (!isset ($dados["id"]) || !isset($dados["nome"]) || !isset($dados["email"])) {
+                http_response_code(400);
+                echo json_encode (["erro" => "Dados incompletos."], JSON_UNESCAPED_UNICODE);
+                exit;
+            }
+
+            // CRIA NOVO USUÁRIO
+            $novo_usuario = [
                 "id" => $dados ["id"],
                 "nome" => $dados ["nome"],
                 "email" => $dados ["email"]
             ];
 
-            // Adiciona o novo usuário ao array existente
-            array_push($usuarios, $novoUsuario);
-            echo json_encode('Usuário inserido com sucesso!');
-            print_r($usuarios);
+            // ADICIONA AO ARRAY DE ÚSUARIO 
+            $usuarios[] = $novo_usuario;
+
+            // SALVA O ARRAY ATUALIZADO NO ARQUIVO JSON
+            file_put_contents($arquivo, json_encode($usuarios, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            break;
+
+            // // Adiciona o novo usuário ao array existente
+            // array_push($usuarios, $novoUsuario);
+            // echo json_encode('Usuário inserido com sucesso!');
+            // print_r($usuarios);
+
             break;
         default:
-            echo "MÉTODO NÃO ENCONTRADO!";
+            // echo "MÉTODO NÃO ENCONTRADO!";
+            http_response_code(405);
+                echo json_encode (["erro" => "Método não permitido!"], JSON_UNESCAPED_UNICODE);
             break;
     }
 
